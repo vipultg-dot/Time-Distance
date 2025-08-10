@@ -13,17 +13,8 @@
       --f1-red:#E10600;
       --asphalt:#2E2E2E;
       --asphalt-2:#3A3A3A;
-      --panel:#1f1f1f;
-      --panel-2:#2a2a2a;
       --text:#ffffff;
-      --muted:#e8e8e8;
-      --blue:#00BFFF;
-      --green:#2BD67B;
-      --amber:#FFC400;
-      --pink:#FF5DA2;
-      --purple:#B084FF;
-      --cyan:#00E0FF;
-      --orange:#FF7A00;
+      --link:#00BFFF;
     }
     *{box-sizing:border-box}
     body{
@@ -37,30 +28,29 @@
     .wrap{max-width:1200px;margin:0 auto;padding:16px 20px;display:flex;align-items:center;gap:14px}
     .logo{width:40px;height:40px;border-radius:10px;background:var(--f1-red);display:grid;place-items:center;box-shadow:0 8px 20px rgba(225,6,0,.35)}
     h1{margin:0;font-family:'Russo One',sans-serif;font-size:24px}
-    a,button,input,select{font-family:inherit}
+    a{color:var(--link);text-decoration:none}
+    a:hover{text-decoration:underline}
     main{max-width:1200px;margin:0 auto;padding:18px;display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
     @media(max-width:1000px){main{grid-template-columns:1fr}}
     .card{background:linear-gradient(180deg,#2f2f2f,#232323);border:1px solid #666;border-radius:14px;padding:14px}
     .card h2{font-family:'Russo One',sans-serif;margin:0 0 8px}
     .sim{display:grid;grid-template-rows:auto 1fr auto;gap:10px;height:640px}
     #canvasWrap{display:grid;place-items:center;background:#1a1a1a;border-radius:12px;border:1px dashed #777;position:relative;overflow:hidden}
-    canvas{max-width:100%;height:auto;background:radial-gradient(circle at 50% 50%, #2b2b2b, #181818)}
+    canvas{width:100%;height:auto;background:radial-gradient(circle at 50% 50%, #2b2b2b, #181818)}
     .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
     .controls label{font-size:14px;color:#fff}
-    .controls input[type="number"]{width:120px;padding:8px;border-radius:10px;border:1px solid #777;background:#101010;color:#fff}
-    .controls select{padding:8px;border-radius:10px;border:1px solid #777;background:#101010;color:#fff}
-    .controls .btn{border:none;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer;color:#fff}
+    .controls input[type="number"], .controls select{width:120px;padding:8px;border-radius:10px;border:1px solid #aaa;background:#101010;color:#fff}
+    .btn{border:none;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer;color:#fff}
     .primary{background:linear-gradient(180deg,var(--f1-red),#b30a06)}
     .ghost{background:linear-gradient(180deg,#3a3a3a,#222)}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .list{display:flex;flex-direction:column;gap:10px;max-height:560px;overflow:auto}
-    .runner{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;padding:10px;border:1px solid #666;border-radius:12px;background:linear-gradient(180deg,#313131,#262626)}
+    .runner{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;padding:10px;border:1px solid #777;border-radius:12px;background:linear-gradient(180deg,#313131,#262626)}
     .dot{width:14px;height:14px;border-radius:50%}
     .small{font-size:12px;color:#eee}
-    .toggle{cursor:pointer;border:1px solid #777;border-radius:999px;padding:6px 10px;background:#111}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .pill{display:inline-block;border:1px solid #777;border-radius:999px;padding:6px 10px;background:#111;font-weight:700}
-    .muted{color:#eaeaea}
+    .toggle{cursor:pointer;border:2px solid #fff;color:#fff;border-radius:999px;padding:7px 12px;background:#252525;font-weight:800;letter-spacing:.2px}
+    .toggle:hover{filter:brightness(1.1)}
+    .pill{display:inline-block;border:1px solid #999;border-radius:999px;padding:6px 10px;background:#111;font-weight:700}
     .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
     footer{max-width:1200px;margin:18px auto 28px;padding:0 18px;color:#fff;display:flex;justify-content:space-between;flex-wrap:wrap}
   </style>
@@ -102,7 +92,7 @@
       </div>
       <div id="canvasWrap">
         <canvas id="trackCanvas" width="720" height="720"></canvas>
-        <div id="hint" class="small" style="position:absolute;bottom:10px;left:10px;opacity:.9;">
+        <div class="small" style="position:absolute;bottom:10px;left:10px;opacity:.9;">
           Tip: Click a driver to select, then drag clockwise/counterclockwise to set direction.
         </div>
       </div>
@@ -122,23 +112,14 @@
 
       <div class="card" style="margin-top:12px">
         <h3 style="margin-top:0">Calculators</h3>
-        <div class="grid2">
+        <div class="row" style="gap:12px;flex-wrap:wrap">
           <div class="pill">First time <b>all meet at any point</b>: <span id="allAny" class="mono">–</span></div>
           <div class="pill">First time <b>all at start</b>: <span id="allStart" class="mono">–</span></div>
         </div>
-        <div class="small muted" style="margin-top:8px">
+        <div class="small" style="margin-top:8px;color:#eaeaea">
           • All meet at any point = LCM of pairwise meeting times w.r.t. a reference driver (handles CW/CCW).<br>
           • All at start = LCM of individual lap times <span class="mono">(L / |v|)</span>.
         </div>
-      </div>
-
-      <div class="card" style="margin-top:12px">
-        <h3 style="margin-top:0">How it works</h3>
-        <ul class="muted">
-          <li>All drivers start at the starting line (12 o'clock).</li>
-          <li>Set speeds in the chosen unit. Click a dot then drag to flip direction.</li>
-          <li>Meeting events are detected precisely; markers appear on the track.</li>
-        </ul>
       </div>
     </aside>
   </main>
@@ -149,23 +130,20 @@
   </footer>
 
   <script>
-    // ====== Utility math (GCD/LCM with scaled integers) ======
+    // ====== Math helpers ======
     function gcd(a, b){ a = Math.abs(a); b = Math.abs(b); while (b > 1e-12){ const t = b; b = a % b; a = t; } return a; }
     function lcm(a, b){ return Math.abs(a*b) / gcd(a,b); }
-    function lcmArray(arr){
-      if(arr.length===0) return 0;
-      return arr.reduce((acc,x)=> lcm(acc,x));
-    }
+    function lcmArray(arr){ if(arr.length===0) return 0; return arr.reduce((acc,x)=> lcm(acc,x)); }
 
-    // ====== Simulation state ======
+    // ====== State ======
     const colors = ["#2BD67B","#00E0FF","#FFC400","#FF5DA2","#B084FF","#FF7A00","#9DFF00","#00FFC6"];
-    const drivers = []; // {id,color,v_mps,dir(+1/-1),theta,selected}
+    const drivers = [];
     let nextId=1;
-    let L = 400; // meters
+    let L = 400;
     let running = false;
     let lastTs = null;
-    let distinctMeetPositions = []; // in meters modulo L (unique within ~1m tolerance)
-    let unit = 'mps'; // 'mps' or 'kmph'
+    let distinctMeetPositions = [];
+    let unit = 'mps'; // mps or kmph
 
     // Canvas
     const canvas = document.getElementById('trackCanvas');
@@ -188,7 +166,7 @@
     const allStart = document.getElementById('allStart');
     const allAny = document.getElementById('allAny');
 
-    // ====== Driver helpers ======
+    // ====== Drivers ======
     function addDriver(v_mps=6, dir=+1){
       const d = { id: nextId++, color: colors[(nextId-2)%colors.length], v_mps, dir, theta: 0, selected:false };
       drivers.push(d);
@@ -200,14 +178,8 @@
       const idx = drivers.findIndex(d=>d.id===id);
       if(idx>=0){ drivers.splice(idx,1); renderDriverList(); recomputeAggregates(); }
     }
-
-    function formatSpeed(d){
-      return unit==='mps' ? d.v_mps.toFixed(2) : (d.v_mps*3.6).toFixed(1);
-    }
-    function parseSpeed(val){
-      const x = parseFloat(val||'0');
-      return unit==='mps' ? x : x/3.6;
-    }
+    function formatSpeed(d){ return unit==='mps' ? d.v_mps.toFixed(2) : (d.v_mps*3.6).toFixed(1); }
+    function parseSpeed(val){ const x = parseFloat(val||'0'); return unit==='mps' ? x : x/3.6; }
 
     function renderDriverList(){
       driverList.innerHTML = "";
@@ -220,15 +192,12 @@
             <div><b>Driver ${d.id}</b> · <span class="mono">${d.dir>0?'CW':'CCW'}</span></div>
             <div class="small">Speed (${unit==='mps'?'m/s':'km/h'}):</div>
           </div>
-          <input type="number" min="0" step="${unit==='mps'?'0.1':'0.5'}" value="${formatSpeed(d)}" style="width:100px;background:#111;color:#fff;border:1px solid #777;border-radius:8px;padding:6px" />
+          <input type="number" min="0" step="${unit==='mps'?'0.1':'0.5'}" value="${formatSpeed(d)}" style="width:110px;background:#111;color:#fff;border:1px solid #fff;border-radius:10px;padding:8px" />
           <button class="toggle">${d.dir>0?'⟳ CW':'⟲ CCW'}</button>
         `;
         const speedInput = row.children[2];
         const toggleBtn = row.children[3];
-        speedInput.addEventListener('input', e=>{
-          d.v_mps = Math.max(0, parseSpeed(e.target.value));
-          recomputeAggregates();
-        });
+        speedInput.addEventListener('input', e=>{ d.v_mps = Math.max(0, parseSpeed(e.target.value)); recomputeAggregates(); });
         toggleBtn.addEventListener('click', ()=>{ d.dir *= -1; renderDriverList(); recomputeAggregates(); });
         driverList.appendChild(row);
       });
@@ -254,20 +223,14 @@
       const l = lcmArray(ms);
       allStart.textContent = (l/scale).toFixed(2) + ' s';
     }
-
     function recomputeAllMeetAnyPoint(){
-      if(drivers.length===0){ allAny.textContent='–'; return; }
-      if(drivers.length===1){ allAny.textContent='0 s (only one driver)'; return; }
-      // Reference driver 0
+      if(drivers.length<=1){ allAny.textContent = drivers.length===1 ? '0 s' : '–'; return; }
       const ref = drivers[0];
       const ts = [];
       for(let i=1;i<drivers.length;i++){
         const d = drivers[i];
         const rel = Math.abs(ref.dir*ref.v_mps - d.dir*d.v_mps);
-        if(rel < 1e-9){
-          // Same angular speed as reference: already together always.
-          continue;
-        }
+        if(rel < 1e-9) continue;
         ts.push(L / rel);
       }
       if(ts.length===0){ allAny.textContent = 'Always together'; return; }
@@ -276,7 +239,6 @@
       const l = lcmArray(ms);
       allAny.textContent = (l/scale).toFixed(2) + ' s';
     }
-
     function computeNextPairMeet(){
       if(drivers.length<2){ nextMeet.textContent = '–'; return; }
       let bestT = Infinity, bestPair = null;
@@ -290,175 +252,129 @@
       }
       nextMeet.textContent = bestT===Infinity ? '–' : `Drivers ${bestPair[0]} & ${bestPair[1]} in ${bestT.toFixed(2)} s`;
     }
+    function recomputeAggregates(){ recomputeAllStartTime(); recomputeAllMeetAnyPoint(); computeNextPairMeet(); }
 
-    function recomputeAggregates(){
-      recomputeAllStartTime();
-      recomputeAllMeetAnyPoint();
-      computeNextPairMeet();
-    }
-
-    // ====== Meeting logic for markers ======
+    // ====== Meeting markers ======
     function modL(x){ x = x % L; if(x<0) x += L; return x; }
+    const meetMarkers = [];
     function recordMeetingAt(s){
       s = modL(s);
       const exists = distinctMeetPositions.some(p => Math.abs(p - s) < 1);
       if(!exists){ distinctMeetPositions.push(s); meetCount.textContent = String(distinctMeetPositions.length); }
     }
 
-    // ====== Canvas drawing ======
-    const meetMarkers = []; // {s:meters}
+    // ====== Drawing ======
     function draw(){
       ctx.clearRect(0,0,W,H);
-      // Outer ring
+      // track
       ctx.beginPath();
       ctx.arc(cx,cy,R_track,0,Math.PI*2);
-      ctx.lineWidth = 14;
-      ctx.strokeStyle = "#3c3c3c";
-      ctx.stroke();
+      ctx.lineWidth = 14; ctx.strokeStyle = "#3c3c3c"; ctx.stroke();
       // lane line
       ctx.beginPath();
       ctx.arc(cx,cy,R_track-18,0,Math.PI*2);
-      ctx.setLineDash([8,10]); ctx.lineDashOffset = 0;
-      ctx.lineWidth = 2; ctx.strokeStyle = "#dcdcdc"; ctx.stroke();
-      ctx.setLineDash([]);
+      ctx.setLineDash([8,10]); ctx.lineWidth = 2; ctx.strokeStyle = "#dcdcdc"; ctx.stroke(); ctx.setLineDash([]);
       // start line
-      ctx.save();
-      ctx.translate(cx,cy);
-      ctx.rotate(-Math.PI/2);
-      ctx.beginPath();
-      ctx.moveTo(R_track-30,0); ctx.lineTo(R_track+10,0);
-      ctx.lineWidth = 4; ctx.strokeStyle = "#fff"; ctx.stroke();
-      ctx.restore();
-
-      // meeting markers
+      ctx.save(); ctx.translate(cx,cy); ctx.rotate(-Math.PI/2);
+      ctx.beginPath(); ctx.moveTo(R_track-30,0); ctx.lineTo(R_track+10,0);
+      ctx.lineWidth = 4; ctx.strokeStyle = "#fff"; ctx.stroke(); ctx.restore();
+      // markers
       meetMarkers.forEach(m=>{
         const ang = -Math.PI/2 + 2*Math.PI*(m.s / L);
         const x = cx + (R_track-6)*Math.cos(ang);
         const y = cy + (R_track-6)*Math.sin(ang);
-        ctx.beginPath();
-        ctx.arc(x,y,5,0,Math.PI*2);
-        ctx.fillStyle = "#FFD54F";
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fillStyle = "#FFD54F"; ctx.fill();
       });
-
       // drivers
       drivers.forEach(d=>{
         const ang = -Math.PI/2 + 2*Math.PI*d.theta;
         const x = cx + (R_track-6)*Math.cos(ang);
         const y = cy + (R_track-6)*Math.sin(ang);
-        ctx.beginPath();
-        ctx.arc(x,y,10,0,Math.PI*2);
-        ctx.fillStyle = d.color;
-        ctx.shadowColor = d.color; ctx.shadowBlur = d.selected ? 20 : 8;
-        ctx.fill(); ctx.shadowBlur = 0;
+        ctx.beginPath(); ctx.arc(x,y,10,0,Math.PI*2);
+        ctx.fillStyle = d.color; ctx.shadowColor = d.color; ctx.shadowBlur = d.selected ? 20 : 8; ctx.fill(); ctx.shadowBlur = 0;
         // direction arrow
         ctx.beginPath();
         const dirAng = ang + (d.dir>0 ? +0.3 : -0.3);
-        ctx.moveTo(x,y);
-        ctx.lineTo(x + 18*Math.cos(dirAng), y + 18*Math.sin(dirAng));
+        ctx.moveTo(x,y); ctx.lineTo(x + 18*Math.cos(dirAng), y + 18*Math.sin(dirAng));
         ctx.lineWidth = 2; ctx.strokeStyle = "#fff"; ctx.stroke();
       });
     }
 
-    // ====== Simulation loop ======
+    // ====== Loop ======
     function step(ts){
       if(!running){ draw(); return; }
       if(lastTs==null) lastTs = ts;
-      const dt = (ts - lastTs)/1000;
-      lastTs = ts;
-
+      const dt = (ts - lastTs)/1000; lastTs = ts;
       drivers.forEach(d=>{
         const lapsPerSec = (d.dir*d.v_mps) / L;
         d.theta = (d.theta + lapsPerSec * dt) % 1;
         if(d.theta < 0) d.theta += 1;
       });
-
-      // detect pairwise meetings within dt
       for(let i=0;i<drivers.length;i++){
         for(let j=i+1;j<drivers.length;j++){
           const a = drivers[i], b = drivers[j];
           const wa = (a.dir*a.v_mps)/L, wb = (b.dir*b.v_mps)/L;
-          const relw = wa - wb;
-          if(Math.abs(relw) < 1e-8) continue;
-          let delta0 = a.theta - b.theta;
-          delta0 = ((delta0 + 0.5) % 1) - 0.5;
+          const relw = wa - wb; if(Math.abs(relw) < 1e-8) continue;
+          let delta0 = a.theta - b.theta; delta0 = ((delta0 + 0.5) % 1) - 0.5;
           const tMeet = -delta0 / relw;
           if(tMeet>0 && tMeet<=dt){
             const thetaMeet = (a.theta + wa*tMeet) % 1;
             const s = thetaMeet * L;
-            meetMarkers.push({s});
-            recordMeetingAt(s);
+            meetMarkers.push({s}); recordMeetingAt(s);
           }
         }
       }
-
-      draw();
-      requestAnimationFrame(step);
+      draw(); requestAnimationFrame(step);
     }
 
-    // ====== Mouse interaction: select & drag to set direction ======
-    let mouseDown = false;
-    let activeDriver = null;
-    let dragStartAngle = null;
-
-    const W2 = canvas.width, H2 = canvas.height;
-    const cx2 = W2/2, cy2 = H2/2;
-
-    function canvasAngle(mx,my){
-      const dx = mx - cx2, dy = my - cy2;
+    // ====== Mouse (scaled for CSS size) ======
+    let mouseDown = false, activeDriver = null, dragStartAngle = null;
+    function getCanvasCoords(e){
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const mx = (e.clientX - rect.left) * scaleX;
+      const my = (e.clientY - rect.top) * scaleY;
+      return {mx,my};
+    }
+    function angleAt(mx,my){
+      const dx = mx - cx, dy = my - cy;
       let ang = Math.atan2(dy, dx);
       ang = (ang + Math.PI*2) % (Math.PI*2);
-      const theta = ((ang + Math.PI/2) % (Math.PI*2)) / (2*Math.PI);
-      return {ang, theta};
+      return ang;
     }
-
     canvas.addEventListener('mousedown', (e)=>{
-      const rect = canvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+      const {mx,my} = getCanvasCoords(e);
       activeDriver = null;
       for(const d of drivers){
         const ang = -Math.PI/2 + 2*Math.PI*d.theta;
         const x = cx + (R_track-6)*Math.cos(ang);
         const y = cy + (R_track-6)*Math.sin(ang);
         const dist2 = (mx-x)*(mx-x) + (my-y)*(my-y);
-        if(dist2 <= 16*16){ activeDriver = d; break; }
+        if(dist2 <= 18*18){ activeDriver = d; break; }
       }
       if(activeDriver){
         drivers.forEach(d=>d.selected=false);
         activeDriver.selected = true;
         mouseDown = true;
-        dragStartAngle = canvasAngle(mx,my).ang;
+        dragStartAngle = angleAt(mx,my);
       }
     });
-
     canvas.addEventListener('mousemove', (e)=>{
       if(!mouseDown || !activeDriver) return;
-      const rect = canvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-      const angNow = canvasAngle(mx,my).ang;
+      const {mx,my} = getCanvasCoords(e);
+      const angNow = angleAt(mx,my);
       const delta = angNow - dragStartAngle;
-      if(Math.abs(delta) > 0.4){
+      if(Math.abs(delta) > 0.35){
         activeDriver.dir = delta > 0 ? +1 : -1;
         recomputeAggregates();
       }
     });
-
     window.addEventListener('mouseup', ()=>{ mouseDown=false; activeDriver=null; drivers.forEach(d=>d.selected=false); });
 
     // ====== Controls ======
-    trackLenInput.addEventListener('input', e=>{
-      const val = parseFloat(e.target.value||"400");
-      L = Math.max(50, val);
-      recomputeAggregates();
-    });
-
-    unitSelect.addEventListener('change', e=>{
-      const newUnit = e.target.value;
-      if(newUnit===unit) return;
-      unit = newUnit;
-      renderDriverList(); // re-render inputs with the new unit & steps
-    });
-
+    trackLenInput.addEventListener('input', e=>{ L = Math.max(50, parseFloat(e.target.value||"400")); recomputeAggregates(); });
+    unitSelect.addEventListener('change', e=>{ unit = e.target.value; renderDriverList(); });
     startBtn.addEventListener('click', ()=>{ if(!running){ running = true; lastTs = null; requestAnimationFrame(step); } });
     pauseBtn.addEventListener('click', ()=> running=false);
     resetBtn.addEventListener('click', ()=>{
@@ -467,20 +383,12 @@
       distinctMeetPositions = []; meetMarkers.length = 0;
       meetCount.textContent = '0'; recomputeAggregates(); draw();
     });
-    addBtn.addEventListener('click', ()=>{
-      addDriver(6 + Math.random()*4, +1);
-      recomputeAggregates();
-    });
-    clearMeetBtn.addEventListener('click', ()=>{
-      distinctMeetPositions=[]; meetMarkers.length=0; meetCount.textContent='0'; draw();
-    });
+    addBtn.addEventListener('click', ()=>{ addDriver(6 + Math.random()*4, +1); recomputeAggregates(); });
+    clearMeetBtn.addEventListener('click', ()=>{ distinctMeetPositions=[]; meetMarkers.length=0; meetCount.textContent='0'; draw(); });
 
-    // ====== Init: two drivers CW ======
-    addDriver(6,+1);
-    addDriver(8,+1);
-    recomputeAggregates();
-    draw();
-    requestAnimationFrame(step);
+    // ====== Init ======
+    addDriver(6,+1); addDriver(8,+1);
+    recomputeAggregates(); draw(); requestAnimationFrame(step);
   </script>
 </body>
 </html>
