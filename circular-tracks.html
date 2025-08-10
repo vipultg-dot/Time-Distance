@@ -11,10 +11,8 @@
   <style>
     :root{
       --f1-red:#E10600;
-      --asphalt:#2E2E2E;
-      --asphalt-2:#3A3A3A;
-      --text:#ffffff;
-      --link:#00BFFF;
+      --bg1:#2E2E2E; --bg2:#3A3A3A;
+      --text:#ffffff; --link:#00BFFF;
     }
     *{box-sizing:border-box}
     body{
@@ -22,34 +20,36 @@
       font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       background:
         linear-gradient(135deg, rgba(255,255,255,.06) 0 2px, transparent 2px 20px) 0 0/28px 28px,
-        repeating-linear-gradient(45deg, var(--asphalt) 0 16px, var(--asphalt-2) 16px 32px);
+        repeating-linear-gradient(45deg, var(--bg1) 0 16px, var(--bg2) 16px 32px);
     }
     header{position:sticky;top:0;z-index:5;background:rgba(20,20,20,.85);backdrop-filter:blur(6px);border-bottom:1px solid #555}
     .wrap{max-width:1200px;margin:0 auto;padding:16px 20px;display:flex;align-items:center;gap:14px}
     .logo{width:40px;height:40px;border-radius:10px;background:var(--f1-red);display:grid;place-items:center;box-shadow:0 8px 20px rgba(225,6,0,.35)}
     h1{margin:0;font-family:'Russo One',sans-serif;font-size:24px}
-    a{color:var(--link);text-decoration:none}
-    a:hover{text-decoration:underline}
+    a{color:var(--link);text-decoration:none} a:hover{text-decoration:underline}
     main{max-width:1200px;margin:0 auto;padding:18px;display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
     @media(max-width:1000px){main{grid-template-columns:1fr}}
     .card{background:linear-gradient(180deg,#2f2f2f,#232323);border:1px solid #666;border-radius:14px;padding:14px}
     .card h2{font-family:'Russo One',sans-serif;margin:0 0 8px}
-    .sim{display:grid;grid-template-rows:auto 1fr auto;gap:10px;height:640px}
-    #canvasWrap{display:grid;place-items:center;background:#1a1a1a;border-radius:12px;border:1px dashed #777;position:relative;overflow:hidden}
-    canvas{width:100%;height:auto;background:radial-gradient(circle at 50% 50%, #2b2b2b, #181818)}
     .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-    .controls label{font-size:14px;color:#fff}
     .controls input[type="number"], .controls select{width:120px;padding:8px;border-radius:10px;border:1px solid #aaa;background:#101010;color:#fff}
     .btn{border:none;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer;color:#fff}
     .primary{background:linear-gradient(180deg,var(--f1-red),#b30a06)}
     .ghost{background:linear-gradient(180deg,#3a3a3a,#222)}
+    /* Responsive sim area — no clipping */
+    .sim{display:grid;grid-template-rows:auto 1fr auto;gap:10px}
+    #canvasWrap{
+      width:100%; aspect-ratio:1 / 1; /* stays square */
+      display:grid; place-items:center; background:#1a1a1a;
+      border-radius:12px; border:1px dashed #777; position:relative; overflow:visible;
+    }
+    canvas{width:100%; height:100%; /* fill wrapper */}
     .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .list{display:flex;flex-direction:column;gap:10px;max-height:560px;overflow:auto}
     .runner{display:grid;grid-template-columns:auto 1fr auto auto;gap:8px;align-items:center;padding:10px;border:1px solid #777;border-radius:12px;background:linear-gradient(180deg,#313131,#262626)}
     .dot{width:14px;height:14px;border-radius:50%}
     .small{font-size:12px;color:#eee}
-    .toggle{cursor:pointer;border:2px solid #fff;color:#fff;border-radius:999px;padding:7px 12px;background:#252525;font-weight:800;letter-spacing:.2px}
-    .toggle:hover{filter:brightness(1.1)}
+    .toggle{cursor:pointer;border:2px solid #fff;color:#fff;border-radius:999px;padding:7px 12px;background:#252525;font-weight:800}
     .pill{display:inline-block;border:1px solid #999;border-radius:999px;padding:6px 10px;background:#111;font-weight:700}
     .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
     footer{max-width:1200px;margin:18px auto 28px;padding:0 18px;color:#fff;display:flex;justify-content:space-between;flex-wrap:wrap}
@@ -91,7 +91,7 @@
         <button id="resetBtn" class="btn ghost">↺ Reset</button>
       </div>
       <div id="canvasWrap">
-        <canvas id="trackCanvas" width="720" height="720"></canvas>
+        <canvas id="trackCanvas" width="800" height="800"></canvas>
         <div class="small" style="position:absolute;bottom:10px;left:10px;opacity:.9;">
           Tip: Click a driver to select, then drag clockwise/counterclockwise to set direction.
         </div>
@@ -118,7 +118,7 @@
         </div>
         <div class="small" style="margin-top:8px;color:#eaeaea">
           • All meet at any point = LCM of pairwise meeting times w.r.t. a reference driver (handles CW/CCW).<br>
-          • All at start = LCM of individual lap times <span class="mono">(L / |v|)</span>.
+          • All at start = LCM of individual lap times <span class="mono">(L / |v|)</span> using exact fractions (no rounding).
         </div>
       </div>
     </aside>
@@ -130,63 +130,85 @@
   </footer>
 
   <script>
-    // ====== Math helpers ======
-    function gcd(a, b){ a = Math.abs(a); b = Math.abs(b); while (b > 1e-12){ const t = b; b = a % b; a = t; } return a; }
-    function lcm(a, b){ return Math.abs(a*b) / gcd(a,b); }
-    function lcmArray(arr){ if(arr.length===0) return 0; return arr.reduce((acc,x)=> lcm(acc,x)); }
+    // ====== Exact fraction helpers ======
+    function gcdInt(a,b){ a=Math.abs(a); b=Math.abs(b); while(b!==0){ const t=b; b=a%b; a=t; } return a; }
+    function lcmInt(a,b){ return Math.abs(a/gcdInt(a,b)*b); }
+    function toFraction(x){
+      // Convert finite decimal to fraction n/d exactly by using string length
+      const s = String(x);
+      if(!s.includes('.')) return {n: Math.trunc(x), d: 1};
+      const parts = s.split('.');
+      const decimals = parts[1].length;
+      const d = Math.pow(10, decimals);
+      const n = Math.round(parseFloat(s) * d);
+      const g = gcdInt(n,d);
+      return {n: n/g, d: d/g};
+    }
+    function multiplyFrac(a,b){ return reduceFrac({n:a.n*b.n, d:a.d*b.d}); }
+    function divideFrac(a,b){ return reduceFrac({n:a.n*b.d, d:a.d*b.n}); }
+    function reduceFrac(fr){ const g=gcdInt(fr.n,fr.d); return {n:fr.n/g, d:fr.d/g}; }
+    function fracToNumber(fr){ return fr.n / fr.d; }
+    function lcmRationals(fracs){
+      // LCM of rationals a_i/b_i (fracs reduced) = lcm(a_i) / gcd(b_i)
+      if(fracs.length===0) return {n:0,d:1};
+      let A = fracs[0].n, B = fracs[0].d;
+      for(let i=1;i<fracs.length;i++){
+        A = lcmInt(A, fracs[i].n);
+        B = gcdInt(B, fracs[i].d);
+      }
+      return reduceFrac({n:A,d:B});
+    }
 
     // ====== State ======
     const colors = ["#2BD67B","#00E0FF","#FFC400","#FF5DA2","#B084FF","#FF7A00","#9DFF00","#00FFC6"];
     const drivers = [];
-    let nextId=1;
-    let L = 400;
-    let running = false;
-    let lastTs = null;
-    let distinctMeetPositions = [];
-    let unit = 'mps'; // mps or kmph
-
+    let nextId=1, L=400, running=false, lastTs=null, unit='mps';
+    let distinctMeetPositions=[];
     // Canvas
-    const canvas = document.getElementById('trackCanvas');
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
-    const cx = W/2, cy = H/2;
-    const R_track = Math.min(W,H)/2 - 40;
+    const canvas=document.getElementById('trackCanvas'), ctx=canvas.getContext('2d');
+    let W=canvas.width, H=canvas.height, cx=W/2, cy=H/2, R_track=Math.min(W,H)/2-40;
 
     // DOM
-    const trackLenInput = document.getElementById('trackLen');
-    const unitSelect = document.getElementById('unitSelect');
-    const startBtn = document.getElementById('startBtn');
-    const pauseBtn = document.getElementById('pauseBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const addBtn = document.getElementById('addBtn');
-    const clearMeetBtn = document.getElementById('clearMeetBtn');
-    const driverList = document.getElementById('driverList');
-    const meetCount = document.getElementById('meetCount');
-    const nextMeet = document.getElementById('nextMeet');
-    const allStart = document.getElementById('allStart');
-    const allAny = document.getElementById('allAny');
+    const trackLenInput=document.getElementById('trackLen');
+    const unitSelect=document.getElementById('unitSelect');
+    const startBtn=document.getElementById('startBtn');
+    const pauseBtn=document.getElementById('pauseBtn');
+    const resetBtn=document.getElementById('resetBtn');
+    const addBtn=document.getElementById('addBtn');
+    const clearMeetBtn=document.getElementById('clearMeetBtn');
+    const driverList=document.getElementById('driverList');
+    const meetCount=document.getElementById('meetCount');
+    const nextMeet=document.getElementById('nextMeet');
+    const allStart=document.getElementById('allStart');
+    const allAny=document.getElementById('allAny');
 
-    // ====== Drivers ======
+    // Resize canvas to wrapper (keeps full track visible)
+    const wrap = document.getElementById('canvasWrap');
+    function resizeCanvas(){
+      const rect = wrap.getBoundingClientRect();
+      const size = Math.min(rect.width, rect.height);
+      canvas.width = canvas.height = Math.floor(size*2); // high DPI
+      W=canvas.width; H=canvas.height; cx=W/2; cy=H/2; R_track=Math.min(W,H)/2-40;
+      draw();
+    }
+    new ResizeObserver(resizeCanvas).observe(wrap);
+
+    // Drivers
     function addDriver(v_mps=6, dir=+1){
-      const d = { id: nextId++, color: colors[(nextId-2)%colors.length], v_mps, dir, theta: 0, selected:false };
-      drivers.push(d);
-      renderDriverList();
-      recomputeAggregates();
-      return d;
+      const d={id:nextId++,color:colors[(nextId-2)%colors.length],v_mps,dir,theta:0,selected:false};
+      drivers.push(d); renderDriverList(); recomputeAggregates(); return d;
     }
     function removeDriver(id){
-      const idx = drivers.findIndex(d=>d.id===id);
-      if(idx>=0){ drivers.splice(idx,1); renderDriverList(); recomputeAggregates(); }
+      const i=drivers.findIndex(d=>d.id===id); if(i>=0){drivers.splice(i,1); renderDriverList(); recomputeAggregates();}
     }
-    function formatSpeed(d){ return unit==='mps' ? d.v_mps.toFixed(2) : (d.v_mps*3.6).toFixed(1); }
-    function parseSpeed(val){ const x = parseFloat(val||'0'); return unit==='mps' ? x : x/3.6; }
+    function formatSpeed(d){ return unit==='mps'? d.v_mps.toFixed(2) : (d.v_mps*3.6).toFixed(1); }
+    function parseSpeed(val){ const x=parseFloat(val||'0'); return unit==='mps'? x : x/3.6; }
 
     function renderDriverList(){
-      driverList.innerHTML = "";
+      driverList.innerHTML="";
       drivers.forEach(d=>{
-        const row = document.createElement('div');
-        row.className = 'runner';
-        row.innerHTML = `
+        const row=document.createElement('div'); row.className='runner';
+        row.innerHTML=`
           <div class="dot" style="background:${d.color}"></div>
           <div>
             <div><b>Driver ${d.id}</b> · <span class="mono">${d.dir>0?'CW':'CCW'}</span></div>
@@ -195,128 +217,115 @@
           <input type="number" min="0" step="${unit==='mps'?'0.1':'0.5'}" value="${formatSpeed(d)}" style="width:110px;background:#111;color:#fff;border:1px solid #fff;border-radius:10px;padding:8px" />
           <button class="toggle">${d.dir>0?'⟳ CW':'⟲ CCW'}</button>
         `;
-        const speedInput = row.children[2];
-        const toggleBtn = row.children[3];
-        speedInput.addEventListener('input', e=>{ d.v_mps = Math.max(0, parseSpeed(e.target.value)); recomputeAggregates(); });
-        toggleBtn.addEventListener('click', ()=>{ d.dir *= -1; renderDriverList(); recomputeAggregates(); });
+        const speedInput=row.children[2]; const toggleBtn=row.children[3];
+        speedInput.addEventListener('input',e=>{ d.v_mps=Math.max(0,parseSpeed(e.target.value)); recomputeAggregates(); });
+        toggleBtn.addEventListener('click',()=>{ d.dir*=-1; renderDriverList(); recomputeAggregates(); });
         driverList.appendChild(row);
       });
       if(drivers.length>2){
         drivers.forEach((d,idx)=>{
-          const row = driverList.children[idx];
-          const btn = document.createElement('button');
-          btn.className = 'toggle';
-          btn.textContent = '🗑 Remove';
-          btn.addEventListener('click', ()=> removeDriver(d.id));
+          const row=driverList.children[idx]; const btn=document.createElement('button');
+          btn.className='toggle'; btn.textContent='🗑 Remove'; btn.addEventListener('click',()=>removeDriver(d.id));
           row.appendChild(btn);
         });
       }
     }
 
-    // ====== Calculators ======
+    // Calculators
     function recomputeAllStartTime(){
       if(drivers.length===0){ allStart.textContent='–'; return; }
-      const scale = 1000;
-      const taus = drivers.map(d=> d.v_mps<=0 ? Infinity : (L/d.v_mps));
-      if(taus.some(x=>!isFinite(x))){ allStart.textContent='– (set speeds > 0)'; return; }
-      const ms = taus.map(t=> Math.round(t*scale));
-      const l = lcmArray(ms);
-      allStart.textContent = (l/scale).toFixed(2) + ' s';
+      // tau_i = L / v_i (seconds). Represent v_i as fraction; tau_i = L * (den/num)
+      const taus = [];
+      for(const d of drivers){
+        if(d.v_mps<=0){ allStart.textContent='– (set speeds > 0)'; return; }
+        const vfr = toFraction(d.v_mps); // num/den
+        // tau = L * den / num
+        let tfr = reduceFrac({n: L * vfr.d, d: vfr.n});
+        taus.push(tfr);
+      }
+      const l = lcmRationals(taus); // fraction
+      allStart.textContent = (fracToNumber(l)).toFixed(2) + ' s';
     }
     function recomputeAllMeetAnyPoint(){
       if(drivers.length<=1){ allAny.textContent = drivers.length===1 ? '0 s' : '–'; return; }
       const ref = drivers[0];
-      const ts = [];
+      const frs = [];
       for(let i=1;i<drivers.length;i++){
         const d = drivers[i];
         const rel = Math.abs(ref.dir*ref.v_mps - d.dir*d.v_mps);
-        if(rel < 1e-9) continue;
-        ts.push(L / rel);
+        if(rel < 1e-12) continue;
+        const rfr = toFraction(rel); // (m/s)
+        // time = L / rel
+        const tfr = reduceFrac({n: L * rfr.d, d: rfr.n});
+        frs.push(tfr);
       }
-      if(ts.length===0){ allAny.textContent = 'Always together'; return; }
-      const scale = 1000;
-      const ms = ts.map(t=> Math.round(t*scale));
-      const l = lcmArray(ms);
-      allAny.textContent = (l/scale).toFixed(2) + ' s';
+      if(frs.length===0){ allAny.textContent='Always together'; return; }
+      const l = lcmRationals(frs);
+      allAny.textContent = (fracToNumber(l)).toFixed(2) + ' s';
     }
     function computeNextPairMeet(){
-      if(drivers.length<2){ nextMeet.textContent = '–'; return; }
-      let bestT = Infinity, bestPair = null;
+      if(drivers.length<2){ nextMeet.textContent='–'; return; }
+      let best=Infinity, pair=null;
       for(let i=0;i<drivers.length;i++){
         for(let j=i+1;j<drivers.length;j++){
-          const di = drivers[i], dj = drivers[j];
-          const rel = Math.abs(di.dir*di.v_mps - dj.dir*dj.v_mps);
-          const t = rel < 1e-9 ? Infinity : (L / rel);
-          if(t < bestT){ bestT = t; bestPair = [di.id, dj.id]; }
+          const a=drivers[i], b=drivers[j];
+          const rel = Math.abs(a.dir*a.v_mps - b.dir*b.v_mps);
+          const t = rel<1e-12 ? Infinity : L/rel;
+          if(t<best){best=t; pair=[a.id,b.id];}
         }
       }
-      nextMeet.textContent = bestT===Infinity ? '–' : `Drivers ${bestPair[0]} & ${bestPair[1]} in ${bestT.toFixed(2)} s`;
+      nextMeet.textContent = best===Infinity ? '–' : `Drivers ${pair[0]} & ${pair[1]} in ${best.toFixed(2)} s`;
     }
     function recomputeAggregates(){ recomputeAllStartTime(); recomputeAllMeetAnyPoint(); computeNextPairMeet(); }
 
-    // ====== Meeting markers ======
-    function modL(x){ x = x % L; if(x<0) x += L; return x; }
-    const meetMarkers = [];
+    // Meetings rendering
+    let meetMarkers=[];
+    function modL(x){ x%=L; if(x<0) x+=L; return x; }
     function recordMeetingAt(s){
       s = modL(s);
-      const exists = distinctMeetPositions.some(p => Math.abs(p - s) < 1);
-      if(!exists){ distinctMeetPositions.push(s); meetCount.textContent = String(distinctMeetPositions.length); }
+      const exists = distinctMeetPositions.some(p=> Math.abs(p-s)<1);
+      if(!exists){ distinctMeetPositions.push(s); meetCount.textContent=String(distinctMeetPositions.length); }
     }
 
-    // ====== Drawing ======
+    // Draw
     function draw(){
-      ctx.clearRect(0,0,W,H);
+      ctx.clearRect(0,0,canvas.width,canvas.height);
       // track
-      ctx.beginPath();
-      ctx.arc(cx,cy,R_track,0,Math.PI*2);
-      ctx.lineWidth = 14; ctx.strokeStyle = "#3c3c3c"; ctx.stroke();
-      // lane line
-      ctx.beginPath();
-      ctx.arc(cx,cy,R_track-18,0,Math.PI*2);
-      ctx.setLineDash([8,10]); ctx.lineWidth = 2; ctx.strokeStyle = "#dcdcdc"; ctx.stroke(); ctx.setLineDash([]);
+      ctx.beginPath(); ctx.arc(cx,cy,R_track,0,Math.PI*2); ctx.lineWidth=14; ctx.strokeStyle="#3c3c3c"; ctx.stroke();
+      // lane
+      ctx.beginPath(); ctx.arc(cx,cy,R_track-18,0,Math.PI*2); ctx.setLineDash([8,10]); ctx.lineWidth=2; ctx.strokeStyle="#dcdcdc"; ctx.stroke(); ctx.setLineDash([]);
       // start line
-      ctx.save(); ctx.translate(cx,cy); ctx.rotate(-Math.PI/2);
-      ctx.beginPath(); ctx.moveTo(R_track-30,0); ctx.lineTo(R_track+10,0);
-      ctx.lineWidth = 4; ctx.strokeStyle = "#fff"; ctx.stroke(); ctx.restore();
+      ctx.save(); ctx.translate(cx,cy); ctx.rotate(-Math.PI/2); ctx.beginPath(); ctx.moveTo(R_track-30,0); ctx.lineTo(R_track+10,0); ctx.lineWidth=4; ctx.strokeStyle="#fff"; ctx.stroke(); ctx.restore();
       // markers
-      meetMarkers.forEach(m=>{
-        const ang = -Math.PI/2 + 2*Math.PI*(m.s / L);
-        const x = cx + (R_track-6)*Math.cos(ang);
-        const y = cy + (R_track-6)*Math.sin(ang);
-        ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fillStyle = "#FFD54F"; ctx.fill();
-      });
+      for(const m of meetMarkers){
+        const ang = -Math.PI/2 + 2*Math.PI*(m.s/L);
+        const x = cx + (R_track-6)*Math.cos(ang), y = cy + (R_track-6)*Math.sin(ang);
+        ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2); ctx.fillStyle="#FFD54F"; ctx.fill();
+      }
       // drivers
-      drivers.forEach(d=>{
+      for(const d of drivers){
         const ang = -Math.PI/2 + 2*Math.PI*d.theta;
-        const x = cx + (R_track-6)*Math.cos(ang);
-        const y = cy + (R_track-6)*Math.sin(ang);
-        ctx.beginPath(); ctx.arc(x,y,10,0,Math.PI*2);
-        ctx.fillStyle = d.color; ctx.shadowColor = d.color; ctx.shadowBlur = d.selected ? 20 : 8; ctx.fill(); ctx.shadowBlur = 0;
-        // direction arrow
-        ctx.beginPath();
-        const dirAng = ang + (d.dir>0 ? +0.3 : -0.3);
-        ctx.moveTo(x,y); ctx.lineTo(x + 18*Math.cos(dirAng), y + 18*Math.sin(dirAng));
-        ctx.lineWidth = 2; ctx.strokeStyle = "#fff"; ctx.stroke();
-      });
+        const x = cx + (R_track-6)*Math.cos(ang), y = cy + (R_track-6)*Math.sin(ang);
+        ctx.beginPath(); ctx.arc(x,y,10,0,Math.PI*2); ctx.fillStyle=d.color; ctx.shadowColor=d.color; ctx.shadowBlur=d.selected?20:8; ctx.fill(); ctx.shadowBlur=0;
+        ctx.beginPath(); const dirAng= ang + (d.dir>0?+0.3:-0.3); ctx.moveTo(x,y); ctx.lineTo(x+18*Math.cos(dirAng), y+18*Math.sin(dirAng)); ctx.lineWidth=2; ctx.strokeStyle="#fff"; ctx.stroke();
+      }
     }
 
-    // ====== Loop ======
+    // Loop
     function step(ts){
       if(!running){ draw(); return; }
-      if(lastTs==null) lastTs = ts;
-      const dt = (ts - lastTs)/1000; lastTs = ts;
-      drivers.forEach(d=>{
-        const lapsPerSec = (d.dir*d.v_mps) / L;
-        d.theta = (d.theta + lapsPerSec * dt) % 1;
-        if(d.theta < 0) d.theta += 1;
-      });
+      if(lastTs==null) lastTs=ts; const dt=(ts-lastTs)/1000; lastTs=ts;
+      for(const d of drivers){
+        const lapsPerSec = (d.dir*d.v_mps)/L;
+        d.theta = (d.theta + lapsPerSec*dt) % 1; if(d.theta<0) d.theta+=1;
+      }
       for(let i=0;i<drivers.length;i++){
         for(let j=i+1;j<drivers.length;j++){
-          const a = drivers[i], b = drivers[j];
-          const wa = (a.dir*a.v_mps)/L, wb = (b.dir*b.v_mps)/L;
-          const relw = wa - wb; if(Math.abs(relw) < 1e-8) continue;
-          let delta0 = a.theta - b.theta; delta0 = ((delta0 + 0.5) % 1) - 0.5;
-          const tMeet = -delta0 / relw;
+          const a=drivers[i], b=drivers[j];
+          const wa=(a.dir*a.v_mps)/L, wb=(b.dir*b.v_mps)/L;
+          const relw=wa-wb; if(Math.abs(relw)<1e-10) continue;
+          let delta0=a.theta-b.theta; delta0=((delta0+0.5)%1)-0.5;
+          const tMeet = -delta0/relw;
           if(tMeet>0 && tMeet<=dt){
             const thetaMeet = (a.theta + wa*tMeet) % 1;
             const s = thetaMeet * L;
@@ -327,68 +336,41 @@
       draw(); requestAnimationFrame(step);
     }
 
-    // ====== Mouse (scaled for CSS size) ======
-    let mouseDown = false, activeDriver = null, dragStartAngle = null;
-    function getCanvasCoords(e){
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      const mx = (e.clientX - rect.left) * scaleX;
-      const my = (e.clientY - rect.top) * scaleY;
-      return {mx,my};
+    // Mouse
+    let mouseDown=false, activeDriver=null, dragStart=0;
+    function getCanvasXY(e){
+      const rect=canvas.getBoundingClientRect();
+      const scaleX = canvas.width/rect.width, scaleY = canvas.height/rect.height;
+      return { x:(e.clientX-rect.left)*scaleX, y:(e.clientY-rect.top)*scaleY };
     }
-    function angleAt(mx,my){
-      const dx = mx - cx, dy = my - cy;
-      let ang = Math.atan2(dy, dx);
-      ang = (ang + Math.PI*2) % (Math.PI*2);
-      return ang;
-    }
-    canvas.addEventListener('mousedown', (e)=>{
-      const {mx,my} = getCanvasCoords(e);
-      activeDriver = null;
+    function angAt(x,y){ let a=Math.atan2(y-cy,x-cx); a=(a+Math.PI*2)%(Math.PI*2); return a; }
+    canvas.addEventListener('mousedown',e=>{
+      const {x,y}=getCanvasXY(e); activeDriver=null;
       for(const d of drivers){
-        const ang = -Math.PI/2 + 2*Math.PI*d.theta;
-        const x = cx + (R_track-6)*Math.cos(ang);
-        const y = cy + (R_track-6)*Math.sin(ang);
-        const dist2 = (mx-x)*(mx-x) + (my-y)*(my-y);
-        if(dist2 <= 18*18){ activeDriver = d; break; }
+        const ang=-Math.PI/2+2*Math.PI*d.theta; const px=cx+(R_track-6)*Math.cos(ang), py=cy+(R_track-6)*Math.sin(ang);
+        const dist2=(x-px)*(x-px)+(y-py)*(y-py); if(dist2<=18*18){ activeDriver=d; break; }
       }
-      if(activeDriver){
-        drivers.forEach(d=>d.selected=false);
-        activeDriver.selected = true;
-        mouseDown = true;
-        dragStartAngle = angleAt(mx,my);
-      }
+      if(activeDriver){ drivers.forEach(d=>d.selected=false); activeDriver.selected=true; mouseDown=true; dragStart=angAt(x,y); }
     });
-    canvas.addEventListener('mousemove', (e)=>{
-      if(!mouseDown || !activeDriver) return;
-      const {mx,my} = getCanvasCoords(e);
-      const angNow = angleAt(mx,my);
-      const delta = angNow - dragStartAngle;
-      if(Math.abs(delta) > 0.35){
-        activeDriver.dir = delta > 0 ? +1 : -1;
-        recomputeAggregates();
-      }
+    canvas.addEventListener('mousemove',e=>{
+      if(!mouseDown||!activeDriver) return; const {x,y}=getCanvasXY(e); const now=angAt(x,y); const delta=now-dragStart;
+      if(Math.abs(delta)>0.35){ activeDriver.dir = delta>0 ? +1 : -1; recomputeAggregates(); }
     });
-    window.addEventListener('mouseup', ()=>{ mouseDown=false; activeDriver=null; drivers.forEach(d=>d.selected=false); });
+    window.addEventListener('mouseup',()=>{ mouseDown=false; activeDriver=null; drivers.forEach(d=>d.selected=false); });
 
-    // ====== Controls ======
-    trackLenInput.addEventListener('input', e=>{ L = Math.max(50, parseFloat(e.target.value||"400")); recomputeAggregates(); });
-    unitSelect.addEventListener('change', e=>{ unit = e.target.value; renderDriverList(); });
-    startBtn.addEventListener('click', ()=>{ if(!running){ running = true; lastTs = null; requestAnimationFrame(step); } });
-    pauseBtn.addEventListener('click', ()=> running=false);
-    resetBtn.addEventListener('click', ()=>{
-      running=false; lastTs=null;
-      drivers.forEach(d=>{ d.theta = 0; });
-      distinctMeetPositions = []; meetMarkers.length = 0;
-      meetCount.textContent = '0'; recomputeAggregates(); draw();
+    // Controls
+    document.getElementById('clearMeetBtn').addEventListener('click',()=>{ distinctMeetPositions=[]; meetMarkers=[]; meetCount.textContent='0'; draw(); });
+    document.getElementById('addBtn').addEventListener('click',()=>{ addDriver(6+Math.random()*4,+1); });
+    document.getElementById('resetBtn').addEventListener('click',()=>{
+      running=false; lastTs=null; drivers.forEach(d=>d.theta=0); distinctMeetPositions=[]; meetMarkers=[]; meetCount.textContent='0'; recomputeAggregates(); draw();
     });
-    addBtn.addEventListener('click', ()=>{ addDriver(6 + Math.random()*4, +1); recomputeAggregates(); });
-    clearMeetBtn.addEventListener('click', ()=>{ distinctMeetPositions=[]; meetMarkers.length=0; meetCount.textContent='0'; draw(); });
+    document.getElementById('startBtn').addEventListener('click',()=>{ if(!running){ running=true; lastTs=null; requestAnimationFrame(step);} });
+    document.getElementById('pauseBtn').addEventListener('click',()=> running=false);
+    document.getElementById('trackLen').addEventListener('input',e=>{ L=Math.max(50,parseFloat(e.target.value||'400')); recomputeAggregates(); });
+    document.getElementById('unitSelect').addEventListener('change',e=>{ unit=e.target.value; renderDriverList(); });
 
-    // ====== Init ======
-    addDriver(6,+1); addDriver(8,+1);
-    recomputeAggregates(); draw(); requestAnimationFrame(step);
+    // Init
+    addDriver(6,+1); addDriver(8,+1); recomputeAggregates(); resizeCanvas(); requestAnimationFrame(step);
   </script>
 </body>
 </html>
